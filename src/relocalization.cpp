@@ -102,9 +102,9 @@ bool ReLocalization::reLocalization(const pcl::PointCloud<pcl::PointXYZINormal>:
     #if 1
         // rough estimation
         Eigen::Matrix4f T_offset = initial_pose_;
-        // if (!NDTMatch(current_scan, local_map, T_offset)) {
-        //     return false;
-        // }
+        if (!NDTMatch(current_scan, local_map, T_offset)) {
+            return false;
+        }
         // refine estimation
         estimation_pose =  T_offset;
         
@@ -167,14 +167,14 @@ bool ReLocalization::NDTMatch(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr i
   pcl::NormalDistributionsTransform<pcl::PointXYZINormal, pcl::PointXYZINormal> ndt;  
   // Setting scale dependent NDT parameters
   // Setting minimum transformation difference for termination condition.
-  ndt.setTransformationEpsilon (0.01);
+  ndt.setTransformationEpsilon (1e-6);
   // Setting maximum step size for More-Thuente line search.
-  ndt.setStepSize (0.1);
+  ndt.setStepSize (1e-3);
   //Setting Resolution of NDT grid structure (VoxelGridCovariance).
   ndt.setResolution (0.3);
 
   // Setting max number of registration iterations.
-  ndt.setMaximumIterations (10);
+  ndt.setMaximumIterations (1000);
 
   // Setting point cloud to be aligned.
   ndt.setInputSource (in);
@@ -267,12 +267,12 @@ bool ReLocalization::GicpMatch(const pcl::PointCloud<pcl::PointXYZINormal>::Ptr 
     gicp_.align(*aligned_source);
 
     T = gicp_.getFinalTransformation();
-    if (gicp_.hasConverged()) {
-        std::cout << "GICP converged." << std::endl << "The score is " << gicp_.getFitnessScore() << std::endl;
-    } else {
-        std::cerr << "###GICP did not converge." << std::endl;
-        return false;
-    }
+    // if (gicp_.hasConverged()) {
+    //     std::cout << "GICP converged." << std::endl << "The score is " << gicp_.getFitnessScore() << std::endl;
+    // } else {
+    //     std::cerr << "###GICP did not converge." << std::endl;
+    //     return false;
+    // }
     std::cout << "GICP offset:" << T(0,3) << ", "<< T(1,3) << ", "<< T(2,3)<< std::endl;
     return true;
 }
